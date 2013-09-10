@@ -2,7 +2,8 @@
 \alias{prop}
 \title{Global percentages of a two-way frequency table.}
 \usage{
-  prop(tab, digits = 1, total = TRUE, percent = FALSE)
+  prop(tab, digits = 1, total = TRUE, percent = FALSE,
+    drop = TRUE)
 }
 \arguments{
   \item{tab}{frequency table}
@@ -14,6 +15,10 @@
 
   \item{percent}{if \code{TRUE}, add a percent sign after
   the values when printing}
+
+  \item{drop}{if \code{TRUE}, lines or columns with a sum
+  of zero, which would generate \code{NaN} percentages, are
+  dropped.}
 }
 \value{
   The result is an object of class \code{table} and
