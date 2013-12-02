@@ -1,6 +1,6 @@
-e21d5586d56ee9a68e4ec61eadd530b7 *DESCRIPTION
+09a7dbffd25c5506a60c05369dd8b495 *DESCRIPTION
 8c3589cbedc48196be61d8201dc38439 *NAMESPACE
-2009ec6c6cc26b9da5a0307ca4aeabf4 *NEWS
+ceb6335ccfdb9290dcd7de32d60040ba *NEWS
 02ac25ce389e27c87edccf35748b628f *R/addNAstr.r
 15d0cda4eb0fbd2f06d8bb1b82ab2c5b *R/datasets.r
 4dab65518e4f9fa27bc59f3b710e2c02 *R/describe.r
@@ -12,7 +12,7 @@ d11b08b4836005ec869f291058ad1fa8 *R/iorder.R
 44139db50ec123f81a26037a8784e95c *R/questionr-package.r
 64ef985aab4a0129225dbe8c34d26d2b *R/recode.r
 9bf8f884cd3fef0ccfbaf20aeb97afcf *R/stats.r
-3b233263c1c9ba2d0d3f1767cbfbcf42 *R/table.multi.r
+17594d05bd8ac57692cc907f1ec5c294 *R/table.multi.r
 5614d252ca11e7bbcd8c82325b055ce1 *R/tables.r
 f10bf29cab041a681830987ce846f4ea *R/tools.r
 9fa6982fea2d3da2368a2e5c913101d3 *R/utils.r
@@ -20,8 +20,8 @@ f10bf29cab041a681830987ce846f4ea *R/tools.r
 ad6d28846139ded83455eed5b1de3697 *data/happy.rda
 30510bd6bded1be56bdf4516aa80e87c *data/hdv2003.rda
 77158de7917fe788e4a15230c2501c68 *data/rp99.rda
-a505b486a9ff757d5c46aa2671fe2c2d *inst/icut/server.R
-41869ff45a67d18fbf9f24d53fd9ec3c *inst/icut/ui.R
+eeae8d7e7cb5dc655ec833fb25f4d1f8 *inst/icut/server.R
+800009d9c897ef13d38da52b41922473 *inst/icut/ui.R
 6b07054764dcde5f01ef5947ad6d15a3 *inst/icut/www/ZeroClipboard.min.js
 b3b1fda4184c7cacb60071b8deb8aed6 *inst/icut/www/ZeroClipboard.swf
 ce7c97488af123114495d512719144bb *inst/icut/www/main.css
@@ -47,7 +47,7 @@ ffc3c69a203864cbbf2aed6912e03306 *inst/po/fr/LC_MESSAGES/R-questionr.mo
 4c2a10d45cf0ffbdde32274a0c740320 *man/clipcopy.Rd
 368f5d90b93d7a40ade7d97750385f58 *man/cprop.Rd
 4a6fd997b4c3c40bbecfa1a5b4670519 *man/cramer.v.Rd
-23c5109d6960cb3b1f0228492894648c *man/cross.multi.table.Rd
+ea01d00d9fc44d0e2db2e63b187e9407 *man/cross.multi.table.Rd
 2d1b4dafd82bf96819f203deba7e0141 *man/describe.Rd
 0c4e31488c2b59c0057717900c41d141 *man/format.proptab.Rd
 d39628b0162501bc2754fdc0025021b6 *man/freq.Rd
@@ -59,7 +59,7 @@ c70b73589ed60a07d04ce67d014e419c *man/iorder.Rd
 a54cb8f452757c4ebd4b6045068b1db9 *man/irec.Rd
 265de4ac86d2460b19c02fa813ca6b50 *man/lookfor.Rd
 5f76dae2bfd5324ee228703704e37889 *man/multi.split.Rd
-e8542b5929782d51d87f611d679a2062 *man/multi.table.Rd
+9b6e252a8a58910e53aa07663c534e79 *man/multi.table.Rd
 1cf24d86d99a76965004361f052ea074 *man/odds.ratio.Rd
 096f5c90e48728e524bebb3b018f46f3 *man/print.proptab.Rd
 58b43c3743de6daded69b869cbd7539d *man/prop.Rd
