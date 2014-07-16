@@ -3,15 +3,8 @@ library(highr)
 
 ## Global variables
 ## Original data frame name and object
-df_name <- getOption("questionr_irec_df")
-df <- get(df_name)
-## Variable to be recoded, name and object
-oldvar_name <- getOption("questionr_irec_oldvar")
-oldvar <- df[,oldvar_name]
-## Formatted source variable name
-src_var <- ifelse(grepl(" ", oldvar_name),
-                  sprintf('%s[,"%s"]', df_name, oldvar_name),
-                  sprintf('%s$%s', df_name, oldvar_name))
+mca_name <- getOption("questionr_imca_mca")
+mca <- get(mca_name)
 
 
 shinyServer(function(input, output) {
@@ -83,7 +76,7 @@ shinyServer(function(input, output) {
     }
 
     ## Generate the code in the interface
-    output$recodeOut <- renderText({
+    output$codeOut <- renderText({
         ## Header
         header <- HTML(paste0("<p class='header'>Recoding <tt>", oldvar_name, "</tt> from <tt>", df_name, "</tt> of class <tt>", class(oldvar), "</tt>.</p>"))
         ## Generate code
