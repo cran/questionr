@@ -6,6 +6,8 @@
 ##' @param df data frame with the binary variables
 ##' @param true.codes optional list of values considered as 'true' for the tabulation
 ##' @param weights optional weighting vector
+##' @param digits number of digits to keep in the output
+##' @param freq add a percentage column 
 ##' @details
 ##' The function is applied to a series of binary variables, each one corresponding to a
 ##' choice of the question. For example, if the question is about seen movies among a movies
@@ -16,11 +18,17 @@
 ##' and counted in the frequency table. It is possible to specify other values to be counted
 ##' with the \code{true.codes} argument. Note than '1' and 'TRUE' are always considered as
 ##' true values even if \code{true.codes} is provided.
+##' 
+##' If \code{freq} is set to TRUE, a percentage column is added to the resulting table. This
+##' percentage is computed by dividing the number of TRUE answers for each value by the total
+##' number of (potentially weighted) observations. Thus, these percentages sum can be greater
+##' than 100.
 ##'
 ##' @return Object of class table.
 ##' @seealso \code{\link[questionr]{cross.multi.table}}, \code{\link[questionr]{multi.split}}, \code{\link{table}}
 ##' @examples
 ##' ## Sample data frame
+##' set.seed(1337)
 ##' sex <- sample(c("Man","Woman"),100,replace=TRUE)
 ##' jazz <- sample(c(0,1),100,replace=TRUE)
 ##' rock <- sample(c(TRUE, FALSE),100,replace=TRUE)
@@ -31,17 +39,28 @@
 ##' multi.table(df[,c("jazz", "rock","electronic")], true.codes=list("Y"))
 ##' ## Weighted frequency table on 'music' variables
 ##' multi.table(df[,c("jazz", "rock","electronic")], true.codes=list("Y"), weights=df$weights)
+##' ## No percentages
+##' multi.table(df[,c("jazz", "rock","electronic")], true.codes=list("Y"), freq=FALSE)
 ##' @export
 
-multi.table <- function(df, true.codes=NULL, weights=NULL) {
+multi.table <- function(df, true.codes=NULL, weights=NULL, digits=1, freq=TRUE) {
   true.codes <- c(as.list(true.codes), TRUE, 1)
-  as.table(sapply(df, function(v) {
+  res <- as.table(sapply(df, function(v) {
     sel <- as.numeric(v %in% true.codes)
     if (!is.null(weights)) sel <- sel * weights
     sum(sel)
   }))
+  if (freq) {
+    if (!is.null(weights)) total <- sum(weights)
+    else total <- nrow(df)
+    pourc <- res / total * 100
+    res <- cbind(res, pourc)
+    colnames(res) <- c("n","%multi")
+  }
+  if(!is.null(digits)) res <- round(res, digits)
+  return(res)
 }
- 
+
 ##' Two-way frequency table between a multiple choices question and a factor
 ##'
 ##' This function allows to generate a two-way frequency table from a multiple
@@ -51,15 +70,21 @@ multi.table <- function(df, true.codes=NULL, weights=NULL) {
 ##' @param df data frame with the binary variables
 ##' @param crossvar factor to cross the multiple choices question with
 ##' @param weights optional weighting vector
+##' @param digits number of digits to keep in the output
+##' @param freq display column percentages 
 ##' @param ... arguments passed to \code{multi.table}
 ##' @details
 ##' See the \code{multi.table} help page for details on handling of the multiple
 ##' choices question and corresponding binary variables.
+##' 
+##' If \code{freq} is set to TRUE, the resulting table gives the columns percentages
+##' based on the contingency table of crossvar in the respondants population.
 ##'
 ##' @return Object of class table.
 ##' @seealso \code{\link[questionr]{multi.table}}, \code{\link[questionr]{multi.split}}, \code{\link{table}}
 ##' @examples
 ##' ## Sample data frame
+##' set.seed(1337)
 ##' sex <- sample(c("Man","Woman"),100,replace=TRUE)
 ##' jazz <- sample(c(0,1),100,replace=TRUE)
 ##' rock <- sample(c(TRUE, FALSE),100,replace=TRUE)
@@ -68,22 +93,31 @@ multi.table <- function(df, true.codes=NULL, weights=NULL) {
 ##' df <- data.frame(sex,jazz,rock,electronic,weights)
 ##' ## Two-way frequency table on 'music' variables by sex
 ##' cross.multi.table(df[,c("jazz", "rock","electronic")], df$sex, true.codes=list("Y"))
+##' ## Column percentages based on respondants
+##' cross.multi.table(df[,c("jazz", "rock","electronic")], df$sex, true.codes=list("Y"), freq=TRUE)
 ##' @export
  
-cross.multi.table <- function(df, crossvar, weights=NULL, ...) {
+cross.multi.table <- function(df, crossvar, weights=NULL, digits=1, freq=FALSE, ...) {
   tmp <- factor(crossvar)
   if(is.null(weights))
-      return(simplify2array(by(df, tmp, multi.table, ...)))
+      res <- simplify2array(by(df, tmp, multi.table, freq=FALSE, digits=NULL, ...))
   else {
       ## (Not very elegant) fix when weights is provided
       df <- cbind(weights, df)
       res <- by(df, tmp, function(d) {
           tmpw <- d[,1]
           tmpd <- d[,-1]
-          multi.table(tmpd, weights=tmpw, ...)
+          multi.table(tmpd, weights=tmpw, freq=FALSE, digits=NULL, ...)
       })
-      return(simplify2array(res))
+      res <- simplify2array(res)
   }
+  if (freq) {
+    if(is.null(weights)) totals <- table(tmp)
+    else totals <- wtd.table(tmp, weights=weights)
+    totals <- totals[colnames(res)]
+    res <- sweep(res, 2, totals, FUN="/") * 100
+  }
+  return(round(res, digits))
 }
 
 ##' Split a multiple choices variable in a series of binary variables
