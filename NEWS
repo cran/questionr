@@ -1,3 +1,19 @@
+questionr 0.5
+-------------
+
+* `irec`, `icut` and `iorder` have been converted to RStudio addins. They now work both with vectors and data frames.
+* Bugfix : handle regexp special chars in variable or split character in multi.split (thanks @markriseley)
+* `irec` allows to select the type of output : character, factor or numeric (thanks @larmarange)
+* `irec` now works with numeric variables
+* Bugfix : name conflicts with global environment objects (thanks @scoavoux)
+* `irec` now trims leading and trailing whitespaces in inputted values
+* Minimal recoding style by default in `irec`
+* Fix false positives in multi.split (thanks @markriseley)
+* New fecondite labelled dataset (thanks @larmarange)
+* New happy dataset (thanks @briatte)
+* cross.multi.table() now accept a `n` argument to display the total number of
+  observations by row or column (when `freq=TRUE`).
+
 questionr 0.4.3
 ---------------
 

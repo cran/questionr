@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: questionr 0.4.2\n"
-"POT-Creation-Date: 2014-10-02 11:08\n"
+"Project-Id-Version: questionr 0.5\n"
+"POT-Creation-Date: 2016-03-02 00:11\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -10,10 +10,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 
-msgid "must not be an object named \"dfobject\"."
-msgstr ""
-
-msgid "must be a data frame."
+msgid "must be a vector, a factor or a data frame."
 msgstr ""
 
 msgid "must be a column of"
@@ -25,13 +22,19 @@ msgstr ""
 msgid "Interactive cutting"
 msgstr ""
 
-msgid "<strong>Warning :</strong> This inteface doesn't do anything by itself. It only generates R code you'll have to copy/paste into your script and execute yourself."
+msgid "Variable and settings"
 msgstr ""
 
-msgid "New variable"
+msgid "Variable to be recoded"
 msgstr ""
 
-msgid "<p>Statistics of <tt>%s</tt> :</p>"
+msgid "Data frame or vector to recode from"
+msgstr ""
+
+msgid "Recoding settings"
+msgstr ""
+
+msgid "Cutting"
 msgstr ""
 
 msgid "Cutting method"
@@ -46,10 +49,31 @@ msgstr ""
 msgid "Append extreme values if necessary"
 msgstr ""
 
-msgid "Send code to console and exit"
+msgid "Code and result"
+msgstr ""
+
+msgid "Code"
+msgstr ""
+
+msgid "Check - table"
+msgstr ""
+
+msgid "Check - barplot"
+msgstr ""
+
+msgid "Data frame column to recode"
+msgstr ""
+
+msgid "New variable name"
+msgstr ""
+
+msgid "<p>Statistics of <tt>%s</tt> :</p>"
 msgstr ""
 
 msgid "Breaks number"
+msgstr ""
+
+msgid "<strong>Warning :</strong> This new variable already exists."
 msgstr ""
 
 msgid "invalid number of intervals"
@@ -70,19 +94,25 @@ msgstr ""
 msgid "Interactive levels ordering"
 msgstr ""
 
-msgid "<strong>Warning :</strong> This interface doesn't do anything by itself. It only generates R code you'll have to copy/paste into your script and execute yourself."
-msgstr ""
-
-msgid "<td>New variable : </td><td>"
-msgstr ""
-
-msgid "Code"
+msgid "Ordering"
 msgstr ""
 
 msgid "Check"
 msgstr ""
 
+msgid "Old variable as rows, new variable as columns."
+msgstr ""
+
+msgid "<strong>Warning :</strong> The variable to be recoded has more than 50 levels."
+msgstr ""
+
 msgid "## Reordering %s"
+msgstr ""
+
+msgid "into %s"
+msgstr ""
+
+msgid "<p class='header'>Reordering <tt>%s</tt> from <tt>%s</tt> of class <tt>%s</tt>.</p>"
 msgstr ""
 
 msgid "<p class='header'>Reordering <tt>%s</tt> of class <tt>%s</tt>.</p>"
@@ -91,22 +121,22 @@ msgstr ""
 msgid "Interactive recoding"
 msgstr ""
 
-msgid "New variable :"
-msgstr ""
-
 msgid "Recoding style"
 msgstr ""
 
-msgid "Convert to factor"
+msgid "Output type"
 msgstr ""
 
-msgid "Old variable as rows, new variable as columns."
+msgid "Recoding"
 msgstr ""
 
 msgid "## Recoding %s into %s"
 msgstr ""
 
 msgid "<p class='header'>Recoding <tt>%s</tt> from <tt>%s</tt> of class <tt>%s</tt>.</p>"
+msgstr ""
+
+msgid "<p class='header'>Recoding <tt>%s</tt> of class <tt>%s</tt>.</p>"
 msgstr ""
 
 msgid "there are no names to search in that object"
@@ -118,7 +148,7 @@ msgstr ""
 msgid "x must be of class 'glm'."
 msgstr ""
 
-msgid "x should be a glm with family=binomial."
+msgid "x should be a glm with family=binomial or family=quasibinomial."
 msgstr ""
 
 msgid "x must be of class 'multinom'."
@@ -128,6 +158,27 @@ msgid "x must be of class 'factor'."
 msgstr ""
 
 msgid "x must be of class 'table'."
+msgstr ""
+
+msgid "x must be of class 'matrix'."
+msgstr ""
+
+msgid "x must be numeric."
+msgstr ""
+
+msgid "x should be a simple value."
+msgstr ""
+
+msgid "x should be between 0 and 1"
+msgstr ""
+
+msgid "y must be numeric."
+msgstr ""
+
+msgid "y should be a simple value."
+msgstr ""
+
+msgid "y should be between 0 and 1"
 msgstr ""
 
 msgid "Recoded"
@@ -140,6 +191,15 @@ msgid "Recoded variable contains only numeric characters."
 msgstr ""
 
 msgid "Consider using as.numeric = TRUE."
+msgstr ""
+
+msgid "<strong>Warning :</strong> This interface doesn't do anything by itself."
+msgstr ""
+
+msgid "It will generate R code, insert it in your current R script, and you'll have to run it yourself."
+msgstr ""
+
+msgid "It only generates R code you'll have to copy/paste into your script and run yourself."
 msgstr ""
 
 msgid "No variables specified; showing top five results."
