@@ -9,28 +9,43 @@
 #' @param exclude vector of values to exclude from the tabulation (if \code{x} is a vector)
 #' @param sort if specified, allow to sort the table by increasing ("inc") or decreasing ("dec") frequencies
 #' @param valid if TRUE, display valid percentages
+#' @param levels the desired levels for the factor in case of labelled vector (\pkg{labelled} package
+#'    must be installed): "labels" for value labels, "values" for values or 
+#'    "prefixed" for labels prefixed with values
 #' @return
 #' The result is an object of class data.frame.
 #' @seealso
 #' \code{\link{table}}, \code{\link[questionr]{prop}}, \code{\link[questionr]{cprop}}, \code{\link[questionr]{rprop}}
+#' @examples 
+#' # factor
+#' data(hdv2003)
+#' freq(hdv2003$qualif)
+#' freq(hdv2003$qualif, cum = TRUE, total = TRUE)
+#' freq(hdv2003$qualif, cum = TRUE, total = TRUE, sort ="dec")
+#' 
+#' # labelled data
+#' data(fecondite)
+#' freq(femmes$region)
+#' freq(femmes$region, levels = "l")
+#' freq(femmes$region, levels = "v")
 #' @export
 
 `freq` <-
-function (x, digits=1, cum=FALSE, total=FALSE, exclude=NULL, sort="", valid=!(NA%in%exclude)) {
+function (x, digits=1, cum=FALSE, total=FALSE, exclude=NULL, sort="", valid=!(NA%in%exclude), 
+          levels = c("prefixed", "labels", "values")) {
+  levels <- match.arg(levels)
   if (is.table(x)) tab <- x
-  else tab <- table(x, exclude=exclude, useNA="ifany")
+  else tab <- table(labelled::to_factor(x, levels), exclude=exclude, useNA="ifany")
   effectifs <- as.vector(tab)
   pourc <- as.vector(effectifs/sum(effectifs)*100)
   result <- data.frame(n=effectifs, pourc=pourc)
-  rownames(result) <- ifelse(is.na(names(tab)),"NA",names(tab))
+  rownames(result) <- ifelse(is.na(names(tab)), "NA", names(tab))
   if (valid) {
-    if (NA %in% names(tab)) {
-      NA.position <- which(is.na(names(tab)))
-      n.na <- tab[NA.position]
-      valid.pourc <- as.vector(effectifs/(sum(effectifs)-n.na)*100)
-      valid.pourc[NA.position] <- 0 # temporary 0 for cumsum
-    } else
-      valid.pourc <- pourc
+    user_na <- unique(as.character(labelled::to_factor(x, levels)[is.na(x)]))
+    NA.position <- which(is.na(names(tab)) | names(tab) %in% user_na)
+    n.na <- sum(tab[NA.position])
+    valid.pourc <- as.vector(effectifs/(sum(effectifs)-n.na)*100)
+    valid.pourc[NA.position] <- 0 # temporary 0 for cumsum
     result <- cbind(result, valid.pourc)
   }
   if (sort=="inc") result <- result[order(result$n),]
@@ -48,10 +63,10 @@ function (x, digits=1, cum=FALSE, total=FALSE, exclude=NULL, sort="", valid=!(NA
       result <- cbind(result, valid.pourc.cum)
     }
   }
-  if (valid & NA %in% names(tab)) {
-    result["NA","valid.pourc"] <- NA
+  if (valid) {
+    result[NA.position,"valid.pourc"] <- NA
     if (cum)
-      result["NA","valid.pourc.cum"] <- NA
+      result[NA.position,"valid.pourc.cum"] <- NA
   }
   names(result)[which(names(result)=="pourc")] <- "%"
   names(result)[which(names(result)=="valid.pourc")] <- "val%"
@@ -65,7 +80,7 @@ function (x, digits=1, cum=FALSE, total=FALSE, exclude=NULL, sort="", valid=!(NA
 #' Generate a frequency table of missing values as raw counts and percentages.
 #'
 #' @param data either a vector or a data frame object
-#' @param ... if \code{x} is a data frame, the names of the variables to examine. When no variable names are provided, the function examines the full data frame and returns the five variables with most missing values.
+#' @param ... if \code{x} is a data frame, the names of the variables to examine or keywords to search for such variables. See \code{\link{lookfor}} for more details.
 #' @return
 #' The result is an object of class data.frame.
 #' @seealso
@@ -78,15 +93,15 @@ function (x, digits=1, cum=FALSE, total=FALSE, exclude=NULL, sort="", valid=!(NA
 #' freq.na(hdv2003)
 #' ## Examine several variables.
 #' freq.na(hdv2003, "nivetud", "trav.satisf")
-#' ## Examine all variables.
-#' freq.na(hdv2003, names(hdv2003))
+#' ## To see only variables with the most number of missing values
+#' head(freq.na(hdv2003))
 #' @export
 
 freq.na <- function(data, ...) {
   d = NULL
-  if (class(data) == "data.frame") {
-    if (length(c(...)) < 1) d = names(data)
-    d = data[, c(d, ...)]
+  if (inherits(data, "data.frame")) {
+    s <- lookfor(data, ...)$variable
+    d = data[, c(s)]
   }
   else {
     d = as.data.frame(data)
@@ -106,13 +121,8 @@ freq.na <- function(data, ...) {
     names(d) = n
   else
     colnames(d) = n
-  if (length(c(...)) < 1 & class(data) == "data.frame") {
-    warning("No variables specified; showing top five results.")
-    return(utils::head(d))
-  }
-  else {
-    return(d)
-  }
+  
+  return(d)
 }
 
 #' Column percentages of a two-way frequency table.
@@ -386,3 +396,51 @@ function (x, digits=NULL, percent=NULL, justify="right", ...) {
   print.table(x, ...)
 }
 
+
+#' Cross tabulation with labelled variables
+#' 
+#' This function is a wrapper around \code{\link[stats]{xtabs}}, adding automatically
+#' value labels for labelled vectors if \pkg{labelled} package eis installed.
+#' 
+#' @param formula a formula object (see \code{\link[stats]{xtabs}})
+#' @param data a data frame
+#' @param levels the desired levels in case of labelled vector: 
+#'    "labels" for value labels, "values" for values or "prefixed" for labels prefixed with values
+#' @param variable_label display variable label if available?
+#' @param ... additional arguments passed to \code{\link[stats]{xtabs}}
+#' 
+#' @seealso \code{\link[stats]{xtabs}}.
+#' @examples 
+#' data(fecondite)
+#' ltabs(~radio, femmes)
+#' ltabs(~radio+tv, femmes)
+#' ltabs(~radio+tv, femmes, "l")
+#' ltabs(~radio+tv, femmes, "v")
+#' ltabs(~radio+tv+journal, femmes)
+#' ltabs(~radio+tv, femmes, variable_label = FALSE)
+#' @export
+#' @importFrom stats as.formula
+#' @importFrom stats terms
+#' @importFrom stats xtabs 
+
+`ltabs` <-
+  function(formula, data, levels = c("prefixed", "labels", "values"), variable_label = TRUE, ...){
+    levels <- match.arg(levels)
+    formula <- stats::as.formula(formula)
+    if (!is.data.frame(data))
+      data <- as.data.frame(data)
+    
+    vars <- attr(stats::terms(formula), "term.labels")
+    
+    dn <- vars
+    for (i in 1:length(vars))
+      if (!is.null(labelled::var_label(data[[vars[i]]])) & variable_label)
+        dn[i] <- paste(vars[i], labelled::var_label(data[[vars[i]]]), sep = ": ")
+    
+    for (v in vars) 
+      data[[v]] <- labelled::to_factor(data[[v]], levels = levels)
+    
+    tab <- stats::xtabs(formula, data, ...)
+    names(dimnames(tab)) <- dn
+    return(tab)
+  }

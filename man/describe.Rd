@@ -2,40 +2,77 @@
 % Please edit documentation in R/describe.R
 \name{describe}
 \alias{describe}
-\title{Describe the variables of a dataset in R, SPSS or Stata formats}
+\alias{describe.factor}
+\alias{describe.numeric}
+\alias{describe.character}
+\alias{describe.default}
+\alias{describe.labelled}
+\alias{describe.data.frame}
+\alias{print.description}
+\title{Describe the variables of a data.frame}
 \usage{
-describe(data, ...)
+describe(x, ...)
+
+\method{describe}{factor}(x, n = 10, show.length = TRUE, freq.n.max = 10,
+  ...)
+
+\method{describe}{numeric}(x, n = 10, show.length = TRUE, freq.n.max = 10,
+  ...)
+
+\method{describe}{character}(x, n = 10, show.length = TRUE,
+  freq.n.max = 10, ...)
+
+\method{describe}{default}(x, n = 10, show.length = TRUE, freq.n.max = 10,
+  ...)
+
+\method{describe}{labelled}(x, n = 10, show.length = TRUE,
+  freq.n.max = 10, ...)
+
+\method{describe}{data.frame}(x, ..., n = 10, freq.n.max = 0)
+
+\method{print}{description}(x, ...)
 }
 \arguments{
-\item{data}{dataset}
+\item{x}{object to describe}
 
-\item{...}{variable names as character strings. Using the "*" or "|" wildcards in a variable name will search for it using a regex match.}
+\item{...}{further arguments passed to or from other methods, see details}
+
+\item{n}{number of first values to display}
+
+\item{show.length}{display length of the vector?}
+
+\item{freq.n.max}{display a frequency table if the number of unique values is less than this value, 0 to hide}
+}
+\value{
+an object of class \code{description}.
 }
 \description{
-This function describes the variables of a dataset that might
-include labels imported with the foreign or memisc packages.
+This function describes the variables of a vector or a dataset that might
+include labels imported with \pkg{haven} packages.
 }
 \details{
-This function wraps around the \code{description} function of the 
-\code{memisc} package and fetches the variable labels in datasets
-imported with the \code{foreign} package.
+When describing a data.frame, you can provide variable names as character strings. 
+Using the "*" or "|" wildcards in a variable name will search for it using a regex match.
+The search will also take into account variable labels, if any.
+See examples.
 }
 \examples{
-# Variables in a standard R data frame.
 data(hdv2003)
-# Find the names of selected variables.
-describe(hdv2003, "age", "sexe", "lecture*", "frere|soeur")
-# Load memisc package and example data.
-\dontrun{require(memisc)
-nes1948.por <- UnZip("anes/NES1948.ZIP","NES1948.POR", package="memisc")
-nes1948 <- spss.portable.file(nes1948.por)
-# Get the labels of selected variables.
-describe(nes1948, "v480050", "version|set", "v48004*")}
-}
-\author{
-François Briatte <f.briatte@gmail.com>
+describe(hdv2003$sexe)
+describe(hdv2003$age)
+data(fecondite)
+describe(femmes$milieu)
+describe(hdv2003)
+describe(hdv2003, "cuisine", "heures.tv")
+describe(hdv2003, "trav*")
+describe(hdv2003, "trav|lecture")
+describe(hdv2003, "trav", "lecture")
+describe(femmes)
+describe(femmes, "ident")
 }
 \seealso{
-\code{\link{regex}}, \code{description} in the \code{memisc} package
+\code{\link{lookfor}}
 }
-
+\author{
+Joseph Larmarange <joseph@larmarange.net>
+}
