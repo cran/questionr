@@ -35,7 +35,7 @@ function (x, digits=1, cum=FALSE, total=FALSE, exclude=NULL, sort="", valid=!(NA
           levels = c("prefixed", "labels", "values")) {
   levels <- match.arg(levels)
   if (is.table(x)) tab <- x
-  else tab <- table(labelled::to_factor(x, levels), exclude=exclude, useNA="ifany")
+  else tab <- table(labelled::to_factor(x, levels), exclude=exclude)
   effectifs <- as.vector(tab)
   pourc <- as.vector(effectifs/sum(effectifs)*100)
   result <- data.frame(n=effectifs, pourc=pourc)
@@ -72,6 +72,7 @@ function (x, digits=1, cum=FALSE, total=FALSE, exclude=NULL, sort="", valid=!(NA
   names(result)[which(names(result)=="valid.pourc")] <- "val%"
   names(result)[which(names(result)=="pourc.cum")] <- "%cum"
   names(result)[which(names(result)=="valid.pourc.cum")] <- "val%cum"
+  class(result) <- c("freqtab", class(result))
   round(result, digits=digits)
 }
 
@@ -444,3 +445,4 @@ function (x, digits=NULL, percent=NULL, justify="right", ...) {
     names(dimnames(tab)) <- dn
     return(tab)
   }
+
