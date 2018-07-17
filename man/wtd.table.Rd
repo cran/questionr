@@ -4,8 +4,8 @@
 \alias{wtd.table}
 \title{Weighted one-way and two-way frequency tables.}
 \usage{
-wtd.table(x, y = NULL, weights = NULL, normwt = FALSE, na.rm = TRUE,
-  na.show = FALSE, exclude = NULL)
+wtd.table(x, y = NULL, weights = NULL, digits = 3, normwt = FALSE,
+  na.rm = TRUE, na.show = FALSE, exclude = NULL)
 }
 \arguments{
 \item{x}{a vector}
@@ -13,6 +13,8 @@ wtd.table(x, y = NULL, weights = NULL, normwt = FALSE, na.rm = TRUE,
 \item{y}{another optional vector for a two-way frequency table. Must be the same length as \code{x}}
 
 \item{weights}{vector of weights, must be the same length as \code{x}}
+
+\item{digits}{Number of significant digits.}
 
 \item{normwt}{if TRUE, normalize weights so that the total weighted count is the same as the unweighted one}
 
@@ -41,5 +43,5 @@ table(hdv2003$sexe, hdv2003$hard.rock)
 wtd.table(hdv2003$sexe, hdv2003$hard.rock, weights=hdv2003$poids)
 }
 \seealso{
-\code{\link[Hmisc]{wtd.table}}, \command{\link{table}}, and the \link{survey} extension.
+\code{\link[Hmisc]{wtd.table}}, \command{\link{table}}, and the \code{survey} package.
 }
