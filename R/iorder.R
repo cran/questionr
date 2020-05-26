@@ -11,10 +11,11 @@
 ##' @return
 ##' The function launches a shiny app in the system web browser. The reordering code is returned in the console
 ##' when the app is closed with the "Done" button.
-##' @author Julien Barnier <julien.barnier@@ens-lyon.fr>
 ##' @examples
-##' \dontrun{data(hdv2003)
-##' iorder(hdv2003, "qualif")}
+##' \dontrun{
+##' data(hdv2003)
+##' iorder(hdv2003, "qualif")
+##' }
 ##' @import shiny
 ##' @import rstudioapi
 ##' @import miniUI
@@ -268,10 +269,10 @@ iorder <- function(obj = NULL, var_name = NULL) {
       }
       ## if check, create temporary variable for check table
       if (check) dest_var <- ".iorder_tmp"
-      newlevels <- paste0(utils::capture.output(dput(input$sortable)), collapse = "")
+      newlevels <- paste0(utils::capture.output(dput(input$sortable)), collapse = "\n")
       out <- gettextf("## Reordering %s", src_var(), domain = "R-questionr")
       if (src_var() != dest_var) out <- paste0(out, gettextf(" into %s", dest_var, domain="R-questionr"))
-      out <- paste0(out, sprintf("\n%s <- factor(%s, levels=", dest_var, src_var()))
+      out <- paste0(out, sprintf("\n%s <- factor(%s,\n levels=", dest_var, src_var()))
       out <- paste0(out, newlevels, ')')
       out
     }
@@ -289,6 +290,7 @@ iorder <- function(obj = NULL, var_name = NULL) {
       }
       ## Generate code
       out <- generate_code()
+      out <- styler::style_text(out)
       ## Generated code syntax highlighting
       out <- paste(highr::hi_html(out), collapse = "\n")
       ## Final paste
@@ -300,6 +302,8 @@ iorder <- function(obj = NULL, var_name = NULL) {
     observeEvent(input$done, {
       ## Generate code
       out <- generate_code()
+      out <- styler::style_text(out)
+      out <- paste(out, collapse = "\n")
       if (run_as_addin) {
         rstudioapi::insertText(text = out)
       } else {

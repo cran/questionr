@@ -4,9 +4,8 @@
 \name{enfants}
 \alias{enfants}
 \title{A fertility survey - "enfants" table}
-\format{a data frame containing one record for each child of the surveyed women in the \link{fecondite} survey.}
-\usage{
-enfants
+\format{
+a data frame containing one record for each child of the surveyed women in the \link{fecondite} survey.
 }
 \description{
 Some fictive results from a fecondity survey.

@@ -8,14 +8,15 @@
 ##' @return
 ##' The function launches a shiny app in the system web browser. The recoding code is returned in the console
 ##' when the app is closed with the "Done" button.
-##' @author Julien Barnier <julien.barnier@@ens-lyon.fr>
 ##' @examples
-##' \dontrun{data(hdv2003)
+##' \dontrun{
+##' data(hdv2003)
 ##' irec()
 ##' v <- sample(c("Red","Green","Blue"), 50, replace=TRUE)
 ##' irec(v)
 ##' irec(hdv2003, "qualif")
-##' irec(hdv2003, sexe) ## this also works}
+##' irec(hdv2003, sexe) ## this also works
+##' }
 ##' @import shiny
 ##' @import rstudioapi
 ##' @import miniUI
@@ -308,7 +309,7 @@ irec <- function(obj = NULL, var_name = NULL) {
       if (is.data.frame(robj())) {
         ## Formatted source variable name
         result <- ifelse(grepl(" ", req(input$var_name)),
-                         sprintf('%s[,"%s"]', req(input$obj_name), req(input$var_name)),
+                         sprintf('%s$`%s`', req(input$obj_name), req(input$var_name)),
                          sprintf('%s$%s', req(input$obj_name), req(input$var_name)))
       }
       if (is.vector(robj()) || is.factor(robj())) {
@@ -421,7 +422,7 @@ irec <- function(obj = NULL, var_name = NULL) {
         }
         ## Normal values
         if (!is.na(l)) {
-          out <- paste0(out, sprintf(',\n               %s = %s',
+          out <- paste0(out, sprintf(',\n %s = %s',
                                      value,
                                      utils::capture.output(dput(l))))
         }
@@ -433,10 +434,10 @@ irec <- function(obj = NULL, var_name = NULL) {
         if (na_recode != "" && has_recode_to_na) { source <- dest_var }
         ## Input conversion if numeric
         if (is.numeric(rvar())) {
-          out <- paste0(sprintf("%s <- fct_recode(%s", dest_var, dest_var), out)
+          out <- paste0(sprintf("%s <- fct_recode(%s\n", dest_var, dest_var), out)
           out <- paste0(sprintf("%s <- as.character(%s)\n", dest_var, source), out)
         } else {
-          out <- paste0(sprintf("%s <- fct_recode(%s", dest_var, source), out)
+          out <- paste0(sprintf("%s <- fct_recode(%s\n", dest_var, source), out)
         }
         out <- paste0(out, ")\n")
       }
@@ -497,14 +498,14 @@ irec <- function(obj = NULL, var_name = NULL) {
         }
         ## Normal values
         if (!is.na(l)) {
-          out <- paste0(out, sprintf(',\n               %s = %s',
+          out <- paste0(out, sprintf(',\n %s = %s',
                                      utils::capture.output(dput(l)),
                                      value))
         } 
         ## NA values
         else {
           recode_NA <- TRUE
-          out <- paste0(out, sprintf(',\n               .missing = %s',
+          out <- paste0(out, sprintf(',\n .missing = %s',
                                      value))
         }
       }
@@ -513,7 +514,8 @@ irec <- function(obj = NULL, var_name = NULL) {
       if (out != "") {
         source <- src_var()
         if (recode_NA && is.factor(rvar())) source <- dest_var
-        out <- paste0(sprintf("%s <- recode(%s", dest_var, source), out)
+        function_name <- ifelse(input$outconv == "factor", "recode_factor", "recode")
+        out <- paste0(sprintf("%s <- %s(%s\n", dest_var, function_name, source), out)
         out <- paste0(out, ")\n")
         ## .missing is not supported for factors
         if (recode_NA && is.factor(rvar())) {
@@ -523,7 +525,6 @@ irec <- function(obj = NULL, var_name = NULL) {
       
       ## Optional output conversion
       output_is_factor <- is.factor(rvar()) && !recode_NA
-      if (!output_is_factor && input$outconv == "factor") out <- paste0(out, sprintf("%s <- factor(%s)\n", dest_var, dest_var))
       if (output_is_factor && input$outconv == "character") out <- paste0(out, sprintf("%s <- as.character(%s)\n", dest_var, dest_var))
       if (input$outconv == "numeric") {
         if (output_is_factor) {
@@ -551,7 +552,7 @@ irec <- function(obj = NULL, var_name = NULL) {
     generate_code <- function(check=FALSE) {
       if (is.data.frame(robj())) {
         dest_var <- ifelse(grepl(" ", req(input$newvar_name)),
-                           sprintf('%s[,"%s"]', req(input$obj_name), req(input$newvar_name)),
+                           sprintf('%s$`%s`', req(input$obj_name), req(input$newvar_name)),
                            sprintf('%s$%s', req(input$obj_name), req(input$newvar_name)))
       }
       if (is.vector(robj()) || is.factor(robj())) {
@@ -581,6 +582,7 @@ irec <- function(obj = NULL, var_name = NULL) {
       }
       ## Generate code
       out <- generate_code()
+      out <- styler::style_text(out)
       ## Generated code syntax highlighting
       out <- paste(highr::hi_html(out), collapse = "\n")
       ## Final paste
@@ -593,6 +595,8 @@ irec <- function(obj = NULL, var_name = NULL) {
     observeEvent(input$done, {
       ## Generate code
       out <- generate_code()
+      out <- styler::style_text(out)
+      out <- paste(out, collapse = "\n")
       if (run_as_addin) {
         rstudioapi::insertText(text = out)
       } else {
