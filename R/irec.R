@@ -27,26 +27,23 @@
 
 
 irec <- function(obj = NULL, var_name = NULL) {
-
+  
+  # Deactivate styler cache to avoid blocking message at
+  # first launch
+  styler::cache_deactivate(verbose = FALSE)
+  
   recoding_styles <- c("Character - minimal" = "charmin", 
                        "Character - complete" = "charcomp",
-                       "fct_recode (forcats)" = "forcats",
-                       "recode (dplyr)" = "recode")
+                       "fct_recode (forcats)" = "forcats")
   selected_recoding_style <- "charmin"
   selected_outconv <- "character"
 
-  ## If dplyr is loaded
-  if (isNamespaceLoaded("dplyr")) {
-    selected_recoding_style <- "recode"
-    selected_outconv <- "character"
-  }
   ## If forcats is loaded
-  if (isNamespaceLoaded("forcats")) {
+  if (exists("fct_recode")) {
     selected_recoding_style <- "forcats"
     selected_outconv <- "factor"
   }
-  
-  
+
   run_as_addin <- ifunc_run_as_addin()
 
   if (is.null(obj)) {
@@ -63,7 +60,7 @@ irec <- function(obj = NULL, var_name = NULL) {
     if (is.character(obj) && length(obj) == 1) {
       obj_name <- obj
       try({
-        obj <- get(obj_name, envir = sys.parent())
+        obj <- get(obj_name, envir = .GlobalEnv)
       }, silent = TRUE)
     }
     else {
@@ -75,7 +72,7 @@ irec <- function(obj = NULL, var_name = NULL) {
         obj_name <- gsub("^\\s*", "", s[[1]][1])
         var_name <- gsub("\\s*$", "", s[[1]][2])
         var_name <- gsub("`", "", var_name)
-        obj <- get(obj_name, envir = sys.parent())
+        obj <- get(obj_name, envir = .GlobalEnv)
     }
     if (inherits(obj, "tbl_df") || inherits(obj, "data.table")) obj <- as.data.frame(obj)
 
@@ -130,9 +127,9 @@ irec <- function(obj = NULL, var_name = NULL) {
                        gettext("Data frame or vector to recode from", domain="R-questionr"),
                        choices = Filter(
                          function(x) {
-                           inherits(get(x, envir = sys.parent()), "data.frame") ||
-                             is.vector(get(x, envir = sys.parent())) ||
-                             is.factor(get(x, envir = sys.parent()))
+                           inherits(get(x, envir = .GlobalEnv), "data.frame") ||
+                             is.vector(get(x, envir = .GlobalEnv)) ||
+                             is.factor(get(x, envir = .GlobalEnv))
                          }, ls(.GlobalEnv)),
                        selected = obj_name, multiple = FALSE)),
               column(6, uiOutput("varInput")))),
@@ -148,7 +145,6 @@ irec <- function(obj = NULL, var_name = NULL) {
             )),
           uiOutput("alreadyexistsAlert"),
           uiOutput("loadedforcatsAlert"),
-          uiOutput("loadeddplyrAlert")
           )),
 
       ## Second panel : recoding fields, dynamically generated
@@ -213,7 +209,7 @@ irec <- function(obj = NULL, var_name = NULL) {
       out <- "<table><tbody>"
       ## List of levels
       if (is.factor(rvar())) levs <- levels(rvar())
-      else levs <- stats::na.omit(unique(rvar()))
+      else levs <- sort(stats::na.omit(unique(rvar())))
       ## Add NA level if there is any NA value
       if (any(is.na(rvar()))) levs <- c(levs, NA)
       ## Generate fields
@@ -275,22 +271,13 @@ irec <- function(obj = NULL, var_name = NULL) {
     })
     
     output$loadedforcatsAlert <- renderUI({
-      if (input$recstyle == "forcats" && !isNamespaceLoaded("forcats")) {
+      if (input$recstyle == "forcats" && !exists("fct_recode")) {
         div(class = "alert alert-warning alert-dismissible",
             HTML('<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>'),
             HTML(gettext("<strong>Warning :</strong> The <tt>forcats</tt> package must be installed and loaded for the generated code to be run.", domain="R-questionr")))
       }
     })
-    
-    output$loadeddplyrAlert <- renderUI({
-      if (input$recstyle == "recode" && !isNamespaceLoaded("dplyr")) {
-        div(class = "alert alert-warning alert-dismissible",
-            HTML('<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>'),
-            HTML(gettext("<strong>Warning :</strong> The <tt>dplyr</tt> package must be installed and loaded for the generated code to be run.", domain="R-questionr")))
-      }
-    })
-    
-    
+
     output$alreadyexistsAlert <- renderUI({
       exists <- FALSE
       if (is.data.frame(robj()) && req(input$newvar_name) %in% names(robj())) 
@@ -336,7 +323,7 @@ irec <- function(obj = NULL, var_name = NULL) {
       ## List levels
       if (is.factor(rvar())) levs <- levels(rvar())
       else {
-        levs <- stats::na.omit(unique(rvar()))
+        levs <- sort(stats::na.omit(unique(rvar())))
         levs <- as.character(levs)
       }
       if (any(is.na(rvar()))) levs <- c(levs, NA)
@@ -395,7 +382,7 @@ irec <- function(obj = NULL, var_name = NULL) {
       ## List levels
       if (is.factor(rvar())) levs <- levels(rvar())
       else {
-        levs <- stats::na.omit(unique(rvar()))
+        levs <- sort(stats::na.omit(unique(rvar())))
         levs <- as.character(levs)
       }
       if (any(is.na(rvar()))) levs <- c(levs, NA)
@@ -469,85 +456,6 @@ irec <- function(obj = NULL, var_name = NULL) {
     }
     
 
-    ## Generate recoding code for dplyr::recode
-    generate_code_recode <- function(dest_var) {
-      out <- ""
-      recode_NA <- FALSE
-      ## List levels
-      if (is.factor(rvar())) levs <- levels(rvar())
-      else {
-        levs <- stats::na.omit(unique(rvar()))
-        levs <- as.character(levs)
-      }
-      if (any(is.na(rvar()))) levs <- c(levs, NA)
-      out <- ""
-      for (l in levs) {
-        l_clean <- gsub(":", "_", l)
-        value <- get_value(input[[paste0("ireclev_", l_clean)]])
-        ## Values unchanged are omitted
-        if (is.na(l) && value == "NA") next
-        if (!is.na(l)) {
-          if (l == input[[paste0("ireclev_", l_clean)]]) next
-          if (l == "" && value == "\"\"") next
-        }
-        ## We can't recode to empty string
-        if (value == '""') { value <- '"-"' }
-        ## Recode to NA   
-        if (value == "NA") {
-          value <- "NA_character_"
-        }
-        ## Normal values
-        if (!is.na(l)) {
-          out <- paste0(out, sprintf(',\n %s = %s',
-                                     utils::capture.output(dput(l)),
-                                     value))
-        } 
-        ## NA values
-        else {
-          recode_NA <- TRUE
-          out <- paste0(out, sprintf(',\n .missing = %s',
-                                     value))
-        }
-      }
-      
-      ## recode      
-      if (out != "") {
-        source <- src_var()
-        if (recode_NA && is.factor(rvar())) source <- dest_var
-        function_name <- ifelse(input$outconv == "factor", "recode_factor", "recode")
-        out <- paste0(sprintf("%s <- %s(%s\n", dest_var, function_name, source), out)
-        out <- paste0(out, ")\n")
-        ## .missing is not supported for factors
-        if (recode_NA && is.factor(rvar())) {
-          out <- paste0(sprintf("%s <- as.character(%s)\n", dest_var, src_var()), out)
-        }
-      }
-      
-      ## Optional output conversion
-      output_is_factor <- is.factor(rvar()) && !recode_NA
-      if (output_is_factor && input$outconv == "character") out <- paste0(out, sprintf("%s <- as.character(%s)\n", dest_var, dest_var))
-      if (input$outconv == "numeric") {
-        if (output_is_factor) {
-          out <- paste0(out, sprintf("%s <- as.numeric(as.character(%s))\n", dest_var, dest_var))
-        } else {
-          out <- paste0(out, sprintf("%s <- as.numeric(%s)\n", dest_var, dest_var))
-        }
-      }
-      
-      ## Initial comment
-      comment <- ""
-      if (dest_var != src_var()) {
-        comment <- gettextf("## Recoding %s into %s\n", src_var(), dest_var, domain = "R-questionr")
-      } else {
-        comment <- gettextf("## Recoding %s\n", src_var(), domain = "R-questionr")
-      }
-      out <- paste0(comment, out)  
-      out
-    }
-    
-    
-    
-    
     ## Call recoding code generation function based on style
     generate_code <- function(check=FALSE) {
       if (is.data.frame(robj())) {
@@ -566,7 +474,6 @@ irec <- function(obj = NULL, var_name = NULL) {
       if (recstyle == "charcomp") return(generate_code_character(dest_var, style = "comp"))
       if (recstyle == "charmin") return(generate_code_character(dest_var, style = "min"))
       if (recstyle == "forcats") return(generate_code_forcats(dest_var))
-      if (recstyle == "recode") return(generate_code_recode(dest_var))
     }
 
     ## Generate the code in the interface
@@ -617,6 +524,7 @@ irec <- function(obj = NULL, var_name = NULL) {
     output$tableOut <- renderTable({
       ## Generate the recoding code with a temporary variable
       code <- generate_code(check = TRUE)
+      if (!exists("fct_recode") && input$recstyle == "forcats") return(NULL)
       if (code != "") {
           ## Eval generated code
           eval(parse(text = code), envir = .GlobalEnv)
