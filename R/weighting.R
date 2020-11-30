@@ -6,8 +6,6 @@
 ##' @aliases wtd.var
 ##' @param x Numeric data vector 
 ##' @param weights Numeric weights vector. Must be the same length as \code{x}
-##' @param normwt Only for \code{wtd.var}, if \code{TRUE} then weights are normalized 
-##' for the weighted count to be the same as the non-weighted one
 ##' @param na.rm if \code{TRUE}, delete \code{NA} values.
 ##' @details
 ##' If \code{weights} is \code{NULL}, then an uniform weighting is applied.
@@ -25,7 +23,7 @@
 ##' @export wtd.mean
 
 `wtd.mean` <-
-function (x, weights = NULL, normwt = "ignored", na.rm = TRUE) 
+function (x, weights = NULL, na.rm = TRUE) 
 {
     if (!length(weights)) 
         return(mean(x, na.rm = na.rm))
@@ -47,8 +45,9 @@ function (x, weights = NULL, normwt = "ignored", na.rm = TRUE)
 #' @param y another optional vector for a two-way frequency table. Must be the same length as \code{x}
 #' @param weights vector of weights, must be the same length as \code{x}
 #' @param normwt if TRUE, normalize weights so that the total weighted count is the same as the unweighted one
-#' @param na.show if TRUE, show NA count in table output
-#' @param na.rm if TRUE, remove NA values before computation
+#' @param useNA wether to include NA values in the table
+#' @param na.show (deprecated) if TRUE, show NA count in table output
+#' @param na.rm (deprecated) if TRUE, remove NA values before computation
 #' @param digits Number of significant digits.
 #' @param exclude values to remove from x and y. To exclude NA, use na.rm argument.
 #' @details
@@ -70,16 +69,30 @@ function (x, weights = NULL, normwt = "ignored", na.rm = TRUE)
 
 
 `wtd.table` <-
-function (x, y = NULL, weights = NULL, digits = 3, normwt = FALSE, na.rm = TRUE, na.show = FALSE, exclude = NULL) 
+function (x, y = NULL, weights = NULL, digits = 3, normwt = FALSE, useNA = c("no", "ifany", "always"), na.rm = TRUE, na.show = FALSE, exclude = NULL) 
 {
   if (is.null(weights)) weights <- rep(1, length(x))  
   if (length(x) != length(weights)) stop("x and weights lengths must be the same")
   if (!is.null(y) & (length(x) != length(y))) stop("x and y lengths must be the same")
-  if (na.show) {
-      x <- addNA(x)
-      if (!is.null(y)) y <- addNA(y)
+  miss.usena <- missing(useNA)
+  useNA <- match.arg(useNA)
+
+  if (normwt) {
+    weights <- weights * length(x)/sum(weights)
   }
-  if (na.rm) {
+
+  if (!missing(na.show) || !missing(na.rm)) {
+    if (miss.usena) warning("'na.rm' and 'na.show' are deprecated. Use 'useNA' instead.")
+    else warning("'na.rm' and 'na.show' are ignored when 'useNA' is provided.")
+  }
+  if (useNA != "no" || (na.show && miss.usena)) {
+    if (match(NA, exclude, nomatch = 0L)) {
+      warning("'exclude' containing NA and 'useNA' != \"no\"' are a bit contradicting")
+    }
+    x <- addNA(x)
+    if (!is.null(y)) y <- addNA(y)
+  }
+  if (useNA == "no" || (na.rm && miss.usena)) {
      s <- !is.na(x) & !is.na(weights)
      if (!is.null(y)) s <- s & !is.na(y)
      x <- x[s, drop = FALSE]
@@ -93,9 +106,6 @@ function (x, y = NULL, weights = NULL, digits = 3, normwt = FALSE, na.rm = TRUE,
     if (!is.null(y)) y <- factor(y[s, drop = FALSE])
     weights <- weights[s]
   }
-  if (normwt) {
-    weights <- weights * length(x)/sum(weights)
-  }
   if (is.null(y)) {
     result <- tapply(weights, x, sum, simplify=TRUE)
   }
@@ -103,12 +113,21 @@ function (x, y = NULL, weights = NULL, digits = 3, normwt = FALSE, na.rm = TRUE,
     result <- tapply(weights, list(x,y), sum, simplify=TRUE)
   }
   result[is.na(result)] <- 0
-  as.table(result)
+  tab <- as.table(result)
+  if (useNA == "ifany") {
+    if (!is.null(y)) {
+      if (sum(tab[,is.na(colnames(tab))]) == 0) tab <- tab[,!is.na(colnames(tab))]
+      if (sum(tab[is.na(rownames(tab)),]) == 0) tab <- tab[!is.na(rownames(tab)),]
+    } else {
+      if (tab[is.na(names(tab))] == 0) tab <- tab[!is.na(names(tab))]
+    }
+  }
+  tab
 }
 
 ##' @export
 
-wtd.var <- function() {
+wtd.var <- function(...) {
   stop("questionr::wtd.var has been removed. Please use Hmisc::wtd.var instead.")
 }
 
@@ -184,7 +203,7 @@ wtd.var <- function() {
     result <- 100 * result
   }
   
-  colnames(result)[1] <- gettext("Overall", domain = "R-questionr")
+  colnames(result)[1] <- "Overall"
   class(result) <- c("proptab", class(result))
 
   attr(result, "percent") <- percent
