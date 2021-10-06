@@ -25,8 +25,10 @@
 `wtd.mean` <-
 function (x, weights = NULL, na.rm = TRUE) 
 {
-    if (!length(weights)) 
-        return(mean(x, na.rm = na.rm))
+    if (!length(weights)) {
+      warning("no weights argument given, computing unweighted mean")
+      return(mean(x, na.rm = na.rm)) 
+    }
     if (na.rm) {
         s <- !is.na(x + weights)
         x <- x[s]
@@ -51,7 +53,13 @@ function (x, weights = NULL, na.rm = TRUE)
 #' @param digits Number of significant digits.
 #' @param exclude values to remove from x and y. To exclude NA, use na.rm argument.
 #' @details
-#' If \code{weights} is not provided, an uniform weghting is used.
+#' If \code{weights} is not provided, an uniform weghting is used. 
+#' 
+#' If some weights are missing (`NA`), they are converted to zero. In case of missing weights 
+#' with `normwt=TRUE`, the observations with missing weights are still counted in the unweighted 
+#' count. You have to filter them out before using this function if you don't want them to be 
+#' taken into account when using `normwt`.
+#' 
 #' @return
 #' If \code{y} is not provided, returns a weighted one-way frequency table
 #' of \code{x}. Otherwise, returns a weighted two-way frequency table of
@@ -69,21 +77,23 @@ function (x, weights = NULL, na.rm = TRUE)
 
 
 `wtd.table` <-
-function (x, y = NULL, weights = NULL, digits = 3, normwt = FALSE, useNA = c("no", "ifany", "always"), na.rm = TRUE, na.show = FALSE, exclude = NULL) 
+function(x, y = NULL, weights = NULL, digits = 3, normwt = FALSE, useNA = c("no", "ifany", "always"), na.rm = TRUE, na.show = FALSE, exclude = NULL) 
 {
-  if (is.null(weights)) weights <- rep(1, length(x))  
+  if (is.null(weights)) {
+    warning("no weights argument given, using uniform weights of 1")
+    weights <- rep(1, length(x))  
+  }
   if (length(x) != length(weights)) stop("x and weights lengths must be the same")
   if (!is.null(y) & (length(x) != length(y))) stop("x and y lengths must be the same")
   miss.usena <- missing(useNA)
   useNA <- match.arg(useNA)
-
+  weights[is.na(weights)] <- 0
   if (normwt) {
     weights <- weights * length(x)/sum(weights)
   }
 
   if (!missing(na.show) || !missing(na.rm)) {
-    if (miss.usena) warning("'na.rm' and 'na.show' are deprecated. Use 'useNA' instead.")
-    else warning("'na.rm' and 'na.show' are ignored when 'useNA' is provided.")
+    warning("'na.rm' and 'na.show' are ignored when 'useNA' is provided.")
   }
   if (useNA != "no" || (na.show && miss.usena)) {
     if (match(NA, exclude, nomatch = 0L)) {
@@ -107,10 +117,10 @@ function (x, y = NULL, weights = NULL, digits = 3, normwt = FALSE, useNA = c("no
     weights <- weights[s]
   }
   if (is.null(y)) {
-    result <- tapply(weights, x, sum, simplify=TRUE)
+    result <- tapply(weights, x, sum, simplify = TRUE)
   }
   else {
-    result <- tapply(weights, list(x,y), sum, simplify=TRUE)
+    result <- tapply(weights, list(x,y), sum, simplify = TRUE)
   }
   result[is.na(result)] <- 0
   tab <- as.table(result)

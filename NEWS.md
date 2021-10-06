@@ -1,3 +1,11 @@
+questionr 0.7.5
+---------------
+
+* Fix `NA` values in weights and `normwt=TRUE` in `wtd.table`
+* bug fix in `describe()` (#126)
+
+
+
 questionr 0.7.4
 ---------------
 
