@@ -1,3 +1,8 @@
+# questionr 0.7.7
+
+* Fix error in `iorder` when reordering a numeric variable with `forcats` (#131, @bassam-abulnoor)
+* Fix error in `irec` when recoding a numeric variable with `forcats` (#131, @bassam-abulnoor)
+
 # questionr 0.7.6
 
 * Better tidyverse styling in irec and iorder (#125, @larmarange)
