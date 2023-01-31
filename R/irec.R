@@ -40,12 +40,9 @@ irec <- function(obj = NULL, var_name = NULL) {
     "fct_recode (forcats)" = "forcats"
   )
   selected_recoding_style <- "charmin"
-  selected_outconv <- "character"
-
   ## If forcats is loaded
   if (exists("fct_recode")) {
     selected_recoding_style <- "forcats"
-    selected_outconv <- "factor"
   }
 
   run_as_addin <- ifunc_run_as_addin()
@@ -333,10 +330,11 @@ irec <- function(obj = NULL, var_name = NULL) {
     src_var <- reactive({
       if (is.data.frame(robj())) {
         ## Formatted source variable name
-        result <- ifelse(grepl(" ", req(input$var_name)),
-          sprintf("%s$`%s`", req(input$obj_name), req(input$var_name)),
-          sprintf("%s$%s", req(input$obj_name), req(input$var_name))
-        )
+        var_name <- req(input$var_name)
+        if (make.names(var_name) != var_name) {
+          var_name <- paste0('`', var_name, '`')
+        }
+        result <- sprintf("%s$%s", req(input$obj_name), var_name)
       }
       if (is.vector(robj()) || is.factor(robj())) {
         result <- req(input$obj_name)
@@ -513,10 +511,11 @@ irec <- function(obj = NULL, var_name = NULL) {
     ## Call recoding code generation function based on style
     generate_code <- function(check = FALSE) {
       if (is.data.frame(robj())) {
-        dest_var <- ifelse(grepl(" ", req(input$newvar_name)),
-          sprintf("%s$`%s`", req(input$obj_name), req(input$newvar_name)),
-          sprintf("%s$%s", req(input$obj_name), req(input$newvar_name))
-        )
+        dest_var <- req(input$newvar_name)
+        if (make.names(dest_var) != dest_var) {
+          dest_var <- paste0('`', dest_var, '`')
+        }
+        dest_var <- sprintf("%s$%s", req(input$obj_name), dest_var)
       }
       if (is.vector(robj()) || is.factor(robj())) {
         dest_var <- req(input$newvar_name)
@@ -571,14 +570,13 @@ irec <- function(obj = NULL, var_name = NULL) {
       out <- paste(out, collapse = "\n")
       if (run_as_addin) {
         rstudioapi::insertText(text = out)
-      } else {
-        out <- paste0(
-          gettext("\n-------- Start recoding code --------\n\n", domain = "R-questionr"),
-          out,
-          gettext("\n--------- End recoding code ---------\n", domain = "R-questionr")
-        )
-        cat(out)
       }
+      out <- paste0(
+        gettext("\n-------- Start recoding code --------\n\n", domain = "R-questionr"),
+        out,
+        gettext("\n--------- End recoding code ---------\n", domain = "R-questionr")
+      )
+      cat(out)
       stopApp()
     })
 
