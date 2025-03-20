@@ -130,3 +130,102 @@ test_that("prop, cprop and lprop tabyl versions are correct", {
     mutate(Freq = format(Freq, nsmall = 1, trim = TRUE))
   expect_equal(sort(tabl$Freq), sort(tab$Freq))
 })
+
+test_that("freqtable results are correct", {
+    skip_if_not_installed("dplyr")
+    data(hdv2003)
+    expect_error(freqtable(hdv2003))
+    expect_error(freqtable(hdv2003, weights = poids))
+    expect_equal(freqtable(hdv2003, nivetud),
+                 xtabs(~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003, nivetud, sport),
+                 xtabs(~ nivetud + sport, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003, starts_with("niv")),
+                 xtabs(~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+
+    expect_equal(freqtable(hdv2003, nivetud, na.rm = FALSE),
+                 xtabs(~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003, nivetud, na.rm = TRUE),
+                 xtabs(~ nivetud, hdv2003),
+                 check.attributes = FALSE)
+
+    expect_equal(freqtable(hdv2003, nivetud, weights = poids),
+                 xtabs(poids ~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003, nivetud, sport, weights = poids),
+                 xtabs(poids ~ nivetud + sport, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003, starts_with("niv"), weights = ends_with("oids")),
+                 xtabs(poids ~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+
+    skip_if_not_installed("survey")
+    library(survey)
+    hdv2003_wtd <- svydesign(ids = ~ 1, weights = ~ poids, data = hdv2003)
+    expect_equal(freqtable(hdv2003_wtd, nivetud),
+                 xtabs(poids ~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003_wtd, nivetud, sport),
+                 xtabs(poids ~ nivetud + sport, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003_wtd, nivetud, sport),
+                 xtabs(poids ~ nivetud + sport, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003_wtd, nivetud, weights = TRUE),
+                 xtabs(poids ~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003_wtd, nivetud, weights = FALSE),
+                 xtabs(~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003_wtd, nivetud, weights = NULL),
+                 xtabs(~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003_wtd, nivetud, weights = NULL, na.rm = FALSE),
+                 xtabs(~ nivetud, hdv2003, addNA = TRUE),
+                 check.attributes = FALSE)
+    expect_equal(freqtable(hdv2003_wtd, nivetud, weights = NULL, na.rm = TRUE),
+                 xtabs(~ nivetud, hdv2003),
+                 check.attributes = FALSE)
+    expect_error(freqtable(hdv2003_wtd, nivetud, weights = age))
+})
+
+test_that("cprop, rprop and prop works with table of 3+ dimensions", {
+  expect_no_error(
+    t <- prop(Titanic)
+  )
+  expect_equal(
+    t["2nd", "Male", "Adult", "Yes"] / 100,
+    Titanic["2nd", "Male", "Adult", "Yes"] / sum(Titanic[, , "Adult", "Yes"])
+  )
+
+  expect_no_error(
+    t <- cprop(Titanic)
+  )
+  expect_equal(
+    t["2nd", "Male", "Adult", "Yes"] / 100,
+    Titanic["2nd", "Male", "Adult", "Yes"] / sum(Titanic[, "Male", "Adult", "Yes"])
+  )
+
+  expect_no_error(
+    t <- rprop(Titanic)
+  )
+  expect_equal(
+    t["2nd", "Male", "Adult", "Yes"] / 100,
+    Titanic["2nd", "Male", "Adult", "Yes"] / sum(Titanic["2nd", , "Adult", "Yes"])
+  )
+
+  expect_no_error(
+    rprop(Titanic, total = FALSE, n = TRUE, digits = 2, percent = TRUE)
+  )
+  expect_no_error(
+    cprop(Titanic, total = FALSE, n = TRUE, digits = 2, percent = TRUE)
+  )
+  expect_no_error(
+    prop(Titanic, total = FALSE, n = TRUE, digits = 2, percent = TRUE)
+  )
+})
+
